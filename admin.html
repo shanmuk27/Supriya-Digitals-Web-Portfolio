@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Studio Admin | Supriya Digitals</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="img/icon1.png" rel="icon">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/otpauth/9.1.4/otpauth.umd.min.js"></script>
+
+    <style>
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #f5e9a0;
+            --dark: #050505;
+            --panel: #111111;
+            --surface: #1a1a1a;
+            --border: rgba(212, 175, 55, 0.15);
+            --muted: #9ca3af;
+            --text: #f3f4f6;
+            --green: #10b981;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --radius: 12px;
+            --glass-bg: rgba(15, 15, 15, 0.75);
+            --glass-border: rgba(212, 175, 55, 0.2);
+            --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            background: #0a0a0a; 
+            background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent 40%),
+                              radial-gradient(circle at bottom left, rgba(212, 175, 55, 0.03), transparent 40%);
+            font-family: 'DM Sans', sans-serif; color: var(--text); margin: 0; padding: 0; height: 100vh; overflow: hidden;
+        }
+
+        /* ── AUTH SCREEN ── */
+        #auth-screen {
+            position: fixed; inset: 0; background: var(--dark); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; text-align: center;
+        }
+        .auth-logo { font-size: 2.5rem; font-weight: 800; color: #fff; letter-spacing: -1px; margin-bottom: 8px; }
+        .auth-logo span { color: var(--gold); }
+        .auth-sub { color: #666; font-size: 0.9rem; margin-bottom: 40px; }
+        .pin-display {
+            font-family: 'DM Mono', monospace; font-size: 2.5rem; letter-spacing: 16px;
+            color: var(--gold); height: 60px; display: flex; align-items: center; justify-content: center;
+            margin-bottom: 30px; min-width: 200px;
+        }
+        .pin-grid { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+        .pin-btn {
+            width: 72px; height: 72px; border-radius: 50%; background: #1e1e1e; color: #fff;
+            font-size: 1.4rem; font-weight: 600; border: 1px solid #333; cursor: pointer;
+            transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+        }
+        .pin-btn:hover { background: #2a2a2a; border-color: var(--gold); }
+        .pin-btn.go { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+        .pin-error { color: #ef4444; font-size: 0.9rem; margin-top: 15px; min-height: 20px; }
+
+        /* ── HEADER ── */
+        .admin-header {
+            background: var(--glass-bg); padding: 0 24px; height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 200; border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        .brand { font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: -0.5px; }
+        .brand span { color: var(--gold); }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .hbtn {
+            height: 34px; padding: 0 14px; border-radius: 6px; font-size: 0.82rem;
+            font-weight: 600; cursor: pointer; border: none; display: inline-flex;
+            align-items: center; gap: 6px; transition: 0.2s; font-family: 'DM Sans', sans-serif;
+        }
+        .hbtn-ghost { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); }
+        .hbtn-ghost:hover { background: rgba(212,175,55,0.1); color: var(--gold); border-color: var(--gold); }
+        .hbtn-gold { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+        .hbtn-gold:hover { background: #b8962c; }
+        .hbtn-red { background: rgba(239, 68, 68, 0.1); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .hbtn-red:hover { background: var(--red); color: #fff; }
+
+        /* ── TOAST ── */
+        #toast-box { position: fixed; top: 70px; right: 20px; z-index: 9998; display: flex; flex-direction: column; gap: 8px; }
+        .toast-item {
+            background: #fff; border-radius: 8px; padding: 12px 16px; min-width: 280px;
+            display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            border-left: 4px solid #3b82f6; transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+            font-weight: 600; font-size: 0.9rem;
+        }
+        .toast-item.show { transform: translateX(0); }
+        .toast-item.success { border-left-color: #059669; }
+        .toast-item.error   { border-left-color: #dc2626; }
+        .toast-item.warning { border-left-color: #d97706; }
+
+        /* ── LAYOUT ── */
+        .admin-layout { display: flex; height: calc(100vh - 60px); overflow: hidden; }
+        .sidebar {
+            width: 250px; background: var(--panel); border-right: 1px solid var(--glass-border);
+            display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .nav-item {
+            padding: 12px 24px; display: flex; align-items: center; gap: 12px;
+            color: var(--muted); font-weight: 600; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.2s; border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: rgba(212,175,55,0.1); color: var(--gold); border-left-color: var(--gold); }
+        .nav-item i { width: 20px; text-align: center; font-size: 1.1rem; }
+        .content-area { flex: 1; overflow-y: auto; background: transparent; padding-bottom: 60px; }
+        .page { max-width: 1200px; margin: 0 auto; padding: 24px 20px; width: 100%; }
+        
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── STAT CARDS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px; margin-bottom: 24px;
+        }
+        .stat-cache-card { grid-column: 1 / -1; flex-direction: row !important; align-items: center !important; flex-wrap: wrap; }
+        .stat-cache-card .cache-btn-row { display: flex; gap: 8px; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+        @media (max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .stat-cache-card { grid-column: 1 / -1; }
+        }
+        @media (max-width: 480px) {
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .stat-cache-card { grid-column: 1 / -1; flex-direction: column !important; align-items: flex-start !important; }
+            .stat-cache-card .cache-btn-row { justify-content: flex-start; width: 100%; }
+        }
+        .stat-card {
+            background: var(--panel); border: 1px solid var(--glass-border); border-radius: var(--radius);
+            padding: 16px 18px; display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.3s, border-color 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--gold); }
+        .stat-icon { width: 44px; height: 44px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; background: rgba(255,255,255,0.05) !important; color: var(--gold) !important; }
+        .stat-val { font-weight: 800; font-size: 1.4rem; line-height: 1; color: var(--text); }
+        .stat-lbl { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 3px; }
+        .stat-critical { color: var(--red) !important; }
+        .stat-cache-card { border: 1.5px solid var(--gold); }
+
+        /* ── SECTION CARD ── */
+        .s-card { background: var(--panel); border: 1px solid var(--glass-border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+        .s-head {
+            padding: 14px 20px; border-bottom: 1px solid var(--glass-border);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+            background: rgba(255,255,255,0.02);
+        }
+        .s-title { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; margin: 0; color: #fff; }
+        .s-body { padding: 20px; }
+
+        /* ── FORM ── */
+        .f-group { margin-bottom: 16px; }
+        .f-label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+        .f-control {
+            width: 100%; padding: 9px 12px; border: 1px solid var(--glass-border); border-radius: 7px;
+            font-size: 0.9rem; font-family: 'DM Sans', sans-serif; color: #fff;
+            background: rgba(0,0,0,0.3); transition: border-color 0.2s;
+        }
+        .f-control:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.12); background: rgba(0,0,0,0.6); }
+        .f-control::placeholder { color: #888; }
+        .f-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+
+        /* ── TYPE TABS ── */
+        .type-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+        .type-tab {
+            padding: 7px 16px; border-radius: 20px; border: 1px solid var(--glass-border);
+            font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: 0.2s;
+            background: rgba(255,255,255,0.05); color: var(--muted); font-family: 'DM Sans', sans-serif;
+        }
+        .type-tab:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .type-tab.active { background: var(--gold); color: var(--dark); border-color: var(--gold); }
+
+        /* ── FOLDER BROWSER ── */
+        .folder-browser { border: 1px solid var(--glass-border); border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.2); }
+        .fb-toolbar { background: rgba(255,255,255,0.03); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--glass-border); gap: 10px; }
+        .fb-path { font-family: 'DM Mono', monospace; font-size: 0.82rem; color: var(--muted); }
+        .fb-list { max-height: 240px; overflow-y: auto; }
+        .fb-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: 0.15s;
+        }
+        .fb-item:hover { background: rgba(255,255,255,0.05); }
+        .fb-item.selected { background: rgba(212,175,55,0.1); }
+        .fb-name { font-weight: 600; font-size: 0.88rem; display: flex; align-items: center; gap: 8px; flex: 1; color: #fff; }
+        .fb-cb { width: 18px; height: 18px; cursor: pointer; accent-color: var(--gold); flex-shrink: 0; }
+
+        /* ── SUBMIT BTN ── */
+        .submit-btn {
+            width: 100%; padding: 12px; background: var(--gold); color: var(--dark); border: none;
+            border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.2s; font-family: 'DM Sans', sans-serif; margin-top: 4px;
+        }
+        .submit-btn:hover { background: #b8962c; }
+        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .progress-bar-wrap { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 10px; display: none; }
+        .progress-bar-fill { height: 100%; background: var(--gold); width: 0%; transition: width 0.2s; }
+        .upload-status { font-size: 0.82rem; color: var(--muted); text-align: center; margin-top: 6px; min-height: 18px; }
+
+        /* ── EVENT GROUP ── */
+        .event-group { border: 1px solid var(--glass-border); border-radius: var(--radius); margin-bottom: 20px; overflow: hidden; background: rgba(0,0,0,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .event-head {
+            background: rgba(212,175,55,0.08); padding: 14px 18px; border-bottom: 1px solid var(--glass-border);
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
+        }
+        .event-name { font-weight: 800; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .event-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+
+        /* ── BATCH ROW ── */
+        .batch-card { border: 1px solid var(--glass-border); border-radius: 8px; margin: 12px; background: rgba(255,255,255,0.03); overflow: hidden; }
+        .batch-head {
+            padding: 12px 16px; display: flex; align-items: center; flex-wrap: wrap;
+            justify-content: space-between; gap: 10px; cursor: pointer; transition: background 0.2s;
+        }
+        .batch-head:hover { background: rgba(255,255,255,0.06); }
+        .batch-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: #fff; }
+        .batch-name { font-weight: 700; font-size: 0.95rem; word-break: break-word; }
+        .batch-count { font-size: 0.78rem; color: var(--gold); font-weight: 600; }
+        .batch-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+        /* ── ACTION BUTTONS ── */
+        .ab {
+            height: 32px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--glass-border); font-size: 0.78rem;
+            font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+            transition: 0.15s; font-family: 'DM Sans', sans-serif; white-space: nowrap;
+            background: rgba(255,255,255,0.05); color: #fff;
+        }
+        .ab-vis-on  { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+        .ab-vis-off { background: rgba(255, 255, 255, 0.05); color: #9ca3af; }
+        .ab-dl-on   { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+        .ab-dl-slow { background: rgba(212, 175, 55, 0.1); color: var(--gold); border-color: rgba(212, 175, 55, 0.3); }
+        .ab-dl-off  { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+        .ab-sync    { background: rgba(14, 165, 233, 0.1); color: #38bdf8; border-color: rgba(14, 165, 233, 0.3); }
+        .ab-copy    { background: rgba(255, 255, 255, 0.05); color: #d1d5db; }
+        .ab-rename  { background: rgba(255, 255, 255, 0.05); color: #d1d5db; }
+        .ab-del     { background: rgba(239, 68, 68, 0.1); color: #f87171; border-color: rgba(239, 68, 68, 0.3); width: 32px; padding: 0; justify-content: center; }
+        .ab-cover   { background: rgba(212, 175, 55, 0.05); color: var(--gold); border-color: rgba(212, 175, 55, 0.3); }
+        .ab-cover.active { background: var(--gold); color: #1a1a1a; }
+        .ab:hover   { filter: brightness(1.2); }
+        .drag-handle { cursor: grab; color: #4b5563; padding: 4px 6px; font-size: 1rem; }
+
+        /* ── MEDIA ROW ── */
+        .media-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; }
+        .m-thumb { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; cursor: zoom-in; flex-shrink: 0; border: 1px solid var(--glass-border); }
+        .m-thumb-icon { width: 42px; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; background: rgba(255,255,255,0.05); color: var(--gold); }
+        .m-info { flex: 1; min-width: 120px; }
+        .m-name { font-size: 0.85rem; font-weight: 600; word-break: break-all; color: #fff; }
+        .m-type { font-size: 0.7rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.5px; }
+        .m-btns { display: flex; gap: 6px; flex-shrink: 0; }
+
+        /* ── HISTORY TABLE ── */
+        .hist-wrap { max-height: 60vh; overflow-y: auto; }
+        .hist-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .hist-table th { background: rgba(0,0,0,0.3); padding: 10px 14px; text-align: left; font-weight: 700; color: var(--muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; }
+        .hist-table td { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; color: #ddd; }
+        .hist-table tr:hover td { background: rgba(255,255,255,0.02); }
+        .badge-live { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 700; }
+        .badge-sel { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 4px; padding: 2px 8px; font-size: 0.72rem; font-weight: 700; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .blink { animation: blink 1s linear infinite; }
+
+        /* ── MODAL ── */
+        .modal-card { background: var(--panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); box-shadow: var(--shadow-lg); }
+        .modal-hd { background: rgba(0,0,0,0.5); border-bottom: 1px solid var(--glass-border); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .modal-hd h5 { margin: 0; font-weight: 700; font-size: 1rem; }
+        .modal-close { background: none; border: none; color: #aaa; font-size: 1.4rem; cursor: pointer; line-height: 1; padding: 0; }
+        .modal-close:hover { color: #fff; }
+
+        /* ── MISC ── */
+        .section-search { width: 100%; padding: 9px 12px; border: 1px solid var(--glass-border); border-radius: 7px; font-size: 0.88rem; font-family: 'DM Sans', sans-serif; background: rgba(0,0,0,0.3); color: #fff; }
+        .section-search:focus { outline: none; border-color: var(--gold); }
+        .singles-divider { padding: 8px 12px; background: rgba(0,0,0,0.3); text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid var(--glass-border); margin-top: 8px; }
+        .empty-state { padding: 40px; text-align: center; color: var(--muted); }
+
+        @media (max-width: 600px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .f-row { grid-template-columns: 1fr; }
+            .batch-btns { justify-content: flex-start; }
+        }
+        @media (max-width: 768px) {
+            .admin-layout { flex-direction: column; height: auto; overflow: visible; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 10px 0; flex-direction: row; overflow-x: auto; white-space: nowrap; }
+            .nav-item { padding: 10px 16px; border-left: none; border-bottom: 3px solid transparent; }
+            .nav-item.active { border-left: none; border-bottom-color: var(--blue); }
+            .content-area { overflow-y: visible; }
+            body { height: auto; overflow: visible; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-box"></div>
+
+<div id="auth-screen">
+    <div class="auth-logo"><span>Supriya</span> Admin</div>
+    <div class="auth-sub">Enter your 6-digit authenticator code</div>
+    <div class="pin-display" id="pin-display">──────</div>
+    <div class="pin-grid">
+        <button class="pin-btn" onclick="enterPin(1)">1</button>
+        <button class="pin-btn" onclick="enterPin(2)">2</button>
+        <button class="pin-btn" onclick="enterPin(3)">3</button>
+        <button class="pin-btn" onclick="enterPin(4)">4</button>
+        <button class="pin-btn" onclick="enterPin(5)">5</button>
+        <button class="pin-btn" onclick="enterPin(6)">6</button>
+        <button class="pin-btn" onclick="enterPin(7)">7</button>
+        <button class="pin-btn" onclick="enterPin(8)">8</button>
+        <button class="pin-btn" onclick="enterPin(9)">9</button>
+        <button class="pin-btn" onclick="enterPin('C')"><i class="fas fa-backspace"></i></button>
+        <button class="pin-btn" onclick="enterPin(0)">0</button>
+        <button class="pin-btn go" onclick="verifyAuth()"><i class="fas fa-arrow-right"></i></button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+</div>
+
+<div id="main-content" style="display:none;">
+
+    <div class="admin-header">
+        <div class="brand"><span>Supriya</span> Admin</div>
+        <div class="header-actions">
+            <button class="hbtn hbtn-gold" onclick="openHistory()"><i class="fas fa-history"></i> History</button>
+            <a href="https://supriyadigitals.github.io" target="_blank" class="hbtn hbtn-ghost"><i class="fas fa-external-link-alt"></i> View Site</a>
+            <button class="hbtn hbtn-red" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
+    </div>
+
+    <div class="admin-layout">
+        <!-- SIDEBAR NAVIGATION -->
+        <div class="sidebar">
+            <div class="nav-item active" onclick="switchAdminTab('dashboard', this)">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </div>
+            <div class="nav-item" onclick="switchAdminTab('content', this)">
+                <i class="fas fa-images"></i> Content Manager
+            </div>
+            <div class="nav-item" onclick="switchAdminTab('settings', this)">
+                <i class="fas fa-cog"></i> Site Settings
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="content-area">
+            <div class="page">
+                
+                <!-- TAB: DASHBOARD -->
+                <div id="tab-dashboard" class="tab-pane active">
+
+        <!-- SERVER STATS -->
+        <div class="stats-row" id="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#eff6ff;"><i class="fas fa-hdd" style="color:#2563eb;"></i></div>
+                <div><div class="stat-val" id="s-disk">--%</div><div class="stat-lbl">NAS Storage</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#ecfdf5;"><i class="fas fa-microchip" style="color:#059669;"></i></div>
+                <div><div class="stat-val" id="s-cpu">--%</div><div class="stat-lbl">CPU Load</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#faf5ff;"><i class="fas fa-memory" style="color:#7c3aed;"></i></div>
+                <div><div class="stat-val" id="s-ram">--%</div><div class="stat-lbl">RAM Usage</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background:#f0fdf4;"><i class="fas fa-users" style="color:#16a34a;"></i></div>
+                <div><div class="stat-val" id="s-traffic">0</div><div class="stat-lbl">Live Viewers</div></div>
+            </div>
+            <div class="stat-card stat-cache-card" style="gap:14px;">
+                <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+                    <div class="stat-icon" style="background:#fffbeb;"><i class="fas fa-layer-group" style="color:#d97706;"></i></div>
+                    <div><div class="stat-val" id="s-cache">-- MB</div><div class="stat-lbl">Cache Size</div></div>
+                </div>
+                <div class="cache-btn-row">
+                    <button class="hbtn hbtn-gold" onclick="cleanCache(this)"><i class="fas fa-broom"></i> Clean Cache</button>
+                    <button class="hbtn hbtn-ghost" onclick="findDuplicates()"><i class="fas fa-search"></i> Duplicates</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRAFFIC DASHBOARD - clean inline bar design -->
+        <div class="s-card" id="traffic-card" style="margin-bottom:20px;">
+            <div class="s-head" style="cursor:pointer;" onclick="toggleTrafficPanel()">
+                <span class="s-title" style="display:flex;align-items:center;gap:10px;">
+                    <span id="traffic-status-dot" style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#6b7280;flex-shrink:0;"></span>
+                    <span>Traffic Monitor</span>
+                    <span id="traffic-summary-badge" style="font-size:0.75rem;color:var(--muted);font-weight:400;"></span>
+                </span>
+                <i class="fas fa-chevron-down text-muted" id="traffic-chevron" style="transition:transform 0.2s;"></i>
+            </div>
+            <div id="traffic-panel" style="display:none;">
+                <!-- Load bar row -->
+                <div style="padding:14px 20px 0;border-top:1px solid var(--border);">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">Server Load</span>
+                        <div style="flex:1;background:var(--border);border-radius:99px;height:8px;overflow:hidden;">
+                            <div id="t-load-bar" style="height:100%;width:0%;border-radius:99px;background:#22c55e;transition:width 0.6s,background 0.4s;"></div>
+                        </div>
+                        <span id="t-load-pct" style="font-size:0.82rem;font-weight:700;color:var(--text);min-width:36px;text-align:right;">0%</span>
+                    </div>
+                </div>
+                <!-- 4 metric pills -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--border);margin-top:14px;">
+                    <div style="padding:14px 16px;border-right:1px solid var(--border);text-align:center;">
+                        <div style="font-size:1.6rem;font-weight:800;color:var(--text);line-height:1;" id="t-viewers">0</div>
+                        <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;">Viewers</div>
+                    </div>
+                    <div style="padding:14px 16px;border-right:1px solid var(--border);text-align:center;">
+                        <div style="font-size:1.6rem;font-weight:800;color:#3b82f6;line-height:1;" id="t-ips">0</div>
+                        <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;">IPs / min</div>
+                    </div>
+                    <div style="padding:14px 16px;border-right:1px solid var(--border);text-align:center;">
+                        <div style="font-size:1.6rem;font-weight:800;color:var(--gold);line-height:1;" id="t-rpm">0</div>
+                        <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;">Req / min</div>
+                    </div>
+                    <div style="padding:14px 16px;text-align:center;">
+                        <div style="font-size:1.6rem;font-weight:800;color:var(--muted);line-height:1;" id="t-throttled">0</div>
+                        <div style="font-size:0.68rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.04em;">Throttled</div>
+                    </div>
+                </div>
+                <!-- Config footer -->
+                <div style="padding:10px 20px;border-top:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap;">
+                    <span style="font-size:0.75rem;color:var(--muted);"><i class="fas fa-users" style="margin-right:4px;color:#22c55e;"></i>Max <strong id="t-max-conc">80</strong> concurrent</span>
+                    <span style="font-size:0.75rem;color:var(--muted);"><i class="fas fa-tachometer-alt" style="margin-right:4px;color:#3b82f6;"></i><strong id="t-max-rpm">120</strong> req/min/IP limit</span>
+                    <span style="font-size:0.75rem;color:var(--muted);"><i class="fas fa-sync-alt" style="margin-right:4px;color:var(--gold);"></i>Refreshes every 8s</span>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: CONTENT MANAGER -->
+        <div id="tab-content" class="tab-pane">
+        <div class="s-card" style="margin-bottom:20px;">
+            <div class="s-head" style="cursor:pointer;" onclick="toggleUploadPanel()">
+                <span class="s-title"><i class="fas fa-plus-circle" style="color:var(--gold);"></i> Add Content to Event</span>
+                <i class="fas fa-chevron-down text-muted" id="upload-chevron"></i>
+            </div>
+            <div id="upload-panel" class="s-body">
+
+                <div class="f-group">
+                    <label class="f-label">Content Type</label>
+                    <div class="type-tabs">
+                        <button class="type-tab active" data-type="link" onclick="switchType('link', this)">🔗 Link NAS Folder</button>
+                        <button class="type-tab" data-type="work" onclick="switchType('work', this)">⬆️ Upload Photos</button>
+                        <button class="type-tab" data-type="album" onclick="switchType('album', this)">📘 Album (PDF)</button>
+                        <button class="type-tab" data-type="teaser" onclick="switchType('teaser', this)">🎥 Teaser Video</button>
+                        <button class="type-tab" data-type="live" onclick="switchType('live', this)">📡 Live Event</button>
+                    </div>
+                </div>
+
+                <div class="f-row">
+                    <div class="f-group">
+                        <label class="f-label">Assign to Event</label>
+                        <select class="f-control" id="eventSelector" onchange="onEventChange()"></select>
+                    </div>
+                    <div class="f-group" id="newEventArea" style="display:none;">
+                        <label class="f-label">New Event Name</label>
+                        <input type="text" class="f-control" id="newEventName" placeholder="e.g. Ravi & Priya Wedding">
+                    </div>
+                    <div class="f-group">
+                        <label class="f-label">Visibility</label>
+                        <select class="f-control" id="visSelect">
+                            <option value="public">Public (Shows on portfolio)</option>
+                            <option value="private">Private (Client only)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="area-link">
+                    <label class="f-label"><i class="fas fa-folder-open mr-1" style="color:var(--gold);"></i> Browse & Select NAS Folders</label>
+                    <div class="folder-browser">
+                        <div class="fb-toolbar">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <button class="hbtn hbtn-ghost" id="fb-back-btn" onclick="folderUp()" disabled><i class="fas fa-level-up-alt"></i> Back</button>
+                                <span class="fb-path" id="fb-path">/</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <span style="font-size:0.8rem; font-weight:700; color:var(--blue);" id="fb-sel-count">0 selected</span>
+                                <input type="text" class="f-control" style="width:160px; padding:6px 10px;" placeholder="Search..." id="fb-search" oninput="filterFolders()">
+                            </div>
+                        </div>
+                        <div style="padding:6px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px;">
+                            <input type="checkbox" class="fb-cb" id="fb-select-all" onchange="selectAllFolders()">
+                            <label for="fb-select-all" style="font-size:0.82rem; font-weight:600; cursor:pointer; margin:0;">Select All in Current View</label>
+                        </div>
+                        <div class="fb-list" id="fb-list">
+                            <div class="empty-state"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="area-work" style="display:none;">
+                    <label class="f-label">Choose Photo Files</label>
+                    <div style="border:2px dashed var(--border); border-radius:8px; padding:30px; text-align:center; cursor:pointer; transition:0.2s;" id="drop-zone" onclick="$('#photo-input').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size:2rem; color:var(--muted); margin-bottom:8px;"></i>
+                        <div style="font-weight:600; color:var(--muted);" id="drop-label">Click to choose photos or drag & drop here</div>
+                        <input type="file" id="photo-input" multiple accept="image/*" style="display:none;" onchange="onFilesChosen(this)">
+                    </div>
+                </div>
+
+                <div id="area-album" style="display:none;">
+                    <div class="f-row">
+                        <div class="f-group">
+                            <label class="f-label">Google Drive / PDF URL</label>
+                            <input type="text" class="f-control" id="album-url" placeholder="https://drive.google.com/...">
+                        </div>
+                        <div class="f-group">
+                            <label class="f-label">Cover Image (optional)</label>
+                            <input type="file" class="f-control" id="album-cover" accept="image/*" style="padding:6px;">
+                        </div>
+                    </div>
+                    <small style="color:var(--muted); font-size:0.78rem;">If no cover image is uploaded, the PDF URL is used as the thumbnail fallback.</small>
+                </div>
+
+                <div id="area-video" style="display:none;">
+                    <div class="f-group">
+                        <label class="f-label" id="yt-label">YouTube URL</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" class="f-control" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." oninput="clearYtPreview()">
+                            <button class="hbtn hbtn-ghost" onclick="fetchYouTubeTitle()" style="white-space:nowrap; flex-shrink:0;"><i class="fas fa-magic"></i> Auto-fill Title</button>
+                        </div>
+                        <div id="yt-preview" style="margin-top:8px; padding:8px 12px; background:#f9fafb; border-radius:6px; font-size:0.85rem; font-weight:600; display:none;"></div>
+                    </div>
+                </div>
+
+                <div class="progress-bar-wrap" id="upload-progress"><div class="progress-bar-fill" id="upload-fill"></div></div>
+                <div class="upload-status" id="upload-status"></div>
+                <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
+                    <i class="fas fa-bolt" style="color:var(--gold);"></i>
+                    <span id="submit-label">LINK SELECTED FOLDERS</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="s-card">
+            <div class="s-head">
+                <span class="s-title"><i class="fas fa-layer-group" style="color:var(--blue);"></i> Client Portals & Events</span>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <select class="f-control" style="width:auto; padding:6px 10px; font-size:0.82rem;" id="type-filter" onchange="fetchMedia()">
+                        <option value="all">All Types</option>
+                        <option value="work">Photos</option>
+                        <option value="link">Linked Folders</option>
+                        <option value="teaser">Teasers</option>
+                        <option value="live">Live Events</option>
+                        <option value="album">Albums</option>
+                    </select>
+                    <button class="hbtn hbtn-ghost" onclick="fetchMedia()"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+            <div style="padding:12px 20px; border-bottom:1px solid var(--glass-border);">
+                <input type="text" class="section-search" id="event-search" placeholder="🔍 Search events by name..." oninput="filterEvents()">
+            </div>
+            <div id="media-container">
+                <div class="empty-state"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+            </div>
+        </div>
+        
+        </div> <!-- End Tab Content -->
+
+        <!-- TAB: SETTINGS -->
+        <div id="tab-settings" class="tab-pane">
+        <!-- ══ MAIN PAGE MANAGER ══════════════════════════════════ -->
+        <div class="s-card" style="margin-bottom:20px;">
+            <div class="s-head" style="cursor:pointer;" onclick="togglePageManager()">
+                <span class="s-title"><i class="fas fa-globe" style="color:#8b5cf6;"></i> Main Website Settings</span>
+                <i class="fas fa-chevron-down text-muted" id="pm-chevron" style="transition:transform 0.2s;"></i>
+            </div>
+            <div id="pm-panel" style="display:none;" class="s-body">
+                <p style="font-size:0.8rem;color:var(--muted);margin:0 0 16px;">Edit the public-facing website content. Changes save instantly — no file editing needed.</p>
+
+                <!-- Hero Section -->
+                <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;">
+                    <div style="background:#f9fafb;padding:8px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);">🏠 Hero / Banner</div>
+                    <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+                        <div class="f-group"><label class="f-label">Banner Tag Line</label><input class="f-control" id="pm-hero-tag" placeholder="Welcome to Supriya Digitals Studio"></div>
+                        <div class="f-group"><label class="f-label">Main Heading</label><input class="f-control" id="pm-hero-title" placeholder="Capturing Life's Best Moments"></div>
+                        <div class="f-group"><label class="f-label">Sub-heading</label><input class="f-control" id="pm-hero-subtitle" placeholder="Professional photography & cinematography since 2001…"></div>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;">
+                    <div style="background:#f9fafb;padding:8px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);">👤 About Section</div>
+                    <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+                        <div class="f-group"><label class="f-label">Section Heading</label><input class="f-control" id="pm-about-title" placeholder="20+ Years of Cinematic Excellence"></div>
+                        <div class="f-group"><label class="f-label">About Text</label><textarea class="f-control" id="pm-about-text" rows="3" style="resize:vertical;" placeholder="Supriya Digitals, established in 2001…"></textarea></div>
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Years Experience</label><input class="f-control" id="pm-stat-years" placeholder="23" type="number"></div>
+                            <div class="f-group"><label class="f-label">Happy Clients</label><input class="f-control" id="pm-stat-clients" placeholder="5000" type="number"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px;">
+                    <div style="background:#f9fafb;padding:8px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);">📞 Contact Info</div>
+                    <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">Phone Number</label><input class="f-control" id="pm-phone" placeholder="+91 92467 89966"></div>
+                            <div class="f-group"><label class="f-label">Email Address</label><input class="f-control" id="pm-email" placeholder="info@supriyadigitals.com" type="email"></div>
+                        </div>
+                        <div class="f-group"><label class="f-label">Studio Address</label><input class="f-control" id="pm-address" placeholder="8-271 Bhargavpet, Mangalagiri, AP 522503"></div>
+                        <div class="f-group"><label class="f-label">Working Hours</label><input class="f-control" id="pm-hours" placeholder="Mon–Sat: 9 AM – 8 PM, Sunday: By Appointment"></div>
+                    </div>
+                </div>
+
+                <!-- Site Config -->
+                <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+                    <div style="background:#f9fafb;padding:8px 14px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);">⚙️ Site Config</div>
+                    <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+                        <div class="f-row">
+                            <div class="f-group"><label class="f-label">WhatsApp Number (with country code)</label><input class="f-control" id="pm-wa-number" placeholder="919246789966"></div>
+                            <div class="f-group"><label class="f-label">Formspree Form ID</label><input class="f-control" id="pm-formspree" placeholder="mqknwbbq"></div>
+                        </div>
+                        <div class="f-group"><label class="f-label">Footer Text</label><input class="f-control" id="pm-footer-text" placeholder="Professional photography services for all your special occasions…"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <button class="submit-btn" style="flex:1;margin:0;" onclick="savePageSettings()"><i class="fas fa-save" style="color:var(--gold);"></i> <span id="pm-save-label">Save Changes to Website</span></button>
+                    <button class="hbtn hbtn-ghost" onclick="loadPageSettings()" title="Reload from saved settings"><i class="fas fa-undo"></i></button>
+                </div>
+                <div id="pm-status" style="margin-top:8px;font-size:0.8rem;text-align:center;display:none;"></div>
+            </div>
+        </div>
+        </div> <!-- End Tab Settings -->
+
+            </div> <!-- End Page -->
+        </div> <!-- End Content Area -->
+    </div> <!-- End Admin Layout -->
+    
+</div> <!-- End Main Content -->
+
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body p-0 text-center position-relative">
+                <button class="btn btn-dark rounded-circle" data-dismiss="modal" style="position:absolute;right:-10px;top:-40px;width:38px;height:38px;"><i class="fas fa-times"></i></button>
+                <img id="preview-img" src="" class="img-fluid rounded shadow-lg" style="max-height:85vh; object-fit:contain; background:#000;">
+                <div id="preview-title" class="text-white mt-2 font-weight-bold small"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-card modal-content">
+            <div class="modal-hd">
+                <h5><i class="fas fa-history" style="color:var(--gold); margin-right:8px;"></i> Viewer History & Analytics</h5>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button class="hbtn hbtn-ghost" onclick="loadHistory()" style="font-size:0.78rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button class="hbtn hbtn-red" onclick="clearHistory(false)" style="font-size:0.78rem;"><i class="fas fa-trash"></i> Clear All</button>
+                    <button class="hbtn" style="background:#1a2a1a; color:#4ade80; border:1px solid #2a4a2a; font-size:0.78rem;" onclick="clearHistory(true)"><i class="fas fa-shield-alt"></i> Keep Selections</button>
+                    <button class="modal-close" data-dismiss="modal">&times;</button>
+                </div>
+            </div>
+            <!-- Toolbar: search + filter -->
+            <div style="display:flex; gap:10px; align-items:center; padding:12px 20px; border-bottom:1px solid #e5e7eb; flex-wrap:wrap; background:#fff;">
+                <div style="position:relative; flex:1; min-width:200px;">
+                    <i class="fas fa-search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:0.8rem;"></i>
+                    <input type="text" id="hist-search" placeholder="Search by event name, code, device..." 
+                        style="width:100%; padding:7px 10px 7px 30px; border:1.5px solid #d1d5db; border-radius:7px; background:#fff; color:#111; font-size:0.85rem;"
+                        oninput="loadHistory()">
+                </div>
+                <select class="f-control" style="width:auto; padding:6px 10px; font-size:0.82rem; background:#fff; color:#111; border-color:#d1d5db;" id="hist-filter" onchange="loadHistory()">
+                    <option value="">All Activity</option>
+                    <option value="selection">📁 Selections Only</option>
+                    <option value="download">⬇️ Downloads Only</option>
+                </select>
+                <span id="hist-count" style="font-size:0.8rem; color:var(--muted); white-space:nowrap;"></span>
+            </div>
+            <div class="hist-wrap" style="overflow-y:auto; max-height:70vh; background:#f9fafb;">
+                <div id="hist-body" style="padding:0;">
+                    <div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Selection Detail Modal -->
+<div class="modal fade" id="selDetailModal" tabindex="-1" style="z-index:1065;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-card modal-content">
+            <div class="modal-hd">
+                <h5 id="sel-detail-title"><i class="fas fa-folder-open" style="color:var(--gold); margin-right:8px;"></i> Selection Detail</h5>
+                <button class="modal-close" data-dismiss="modal">&times;</button>
+            </div>
+            <div style="padding:20px;" id="sel-detail-body"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="duplicatesModal" tabindex="-1" style="z-index:1060;">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="max-height:90vh;">
+        <div class="modal-card modal-content" style="height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div class="modal-hd" style="flex-shrink:0;">
+                <h5><i class="fas fa-copy" style="color:var(--gold); margin-right:8px;"></i> Duplicate Files in Cache</h5>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span id="dup-summary" style="font-size:0.82rem; color:#aaa;"></span>
+                    <button class="hbtn hbtn-ghost" onclick="loadDuplicates()" style="font-size:0.78rem;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button class="modal-close" data-dismiss="modal">&times;</button>
+                </div>
+            </div>
+            <div id="dup-body" style="flex:1;overflow-y:auto;padding:16px;min-height:0;">
+                <div class="empty-state"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<script>
+// ════════════════════════════════════════════════
+//  CONFIGURATION
+// ════════════════════════════════════════════════
+const API_BASE         = "https://supriyadigitals.store/api/";
+const VIEW_BASE        = "https://supriyadigitals.github.io/view.html";
+const TOTP_SECRET      = "ONUW42LROQYTIMLTEB2GQZJAO5QXI2DP";
+// IMPORTANT: This must match ADMIN_TOKEN in db_config.php
+const ADMIN_TOKEN      = "SupriyaAdmin@2025Secret";
+
+// ════════════════════════════════════════════════
+//  API HELPERS — always include admin_token
+// ════════════════════════════════════════════════
+function apiUrl(path) {
+    const sep = path.includes('?') ? '&' : '?';
+    return API_BASE + path + sep + 'admin_token=' + encodeURIComponent(ADMIN_TOKEN);
+}
+
+function apiGet(path, done, fail) {
+    return $.get(apiUrl(path))
+        .done(done || function(){})
+        .fail(fail || function(){ showToast('Network error', 'error'); });
+}
+
+function apiPost(path, data, done, fail) {
+    data.admin_token = ADMIN_TOKEN;
+    return $.ajax({
+        url: API_BASE + path,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data)
+    }).done(done || function(){}).fail(fail || function(){ showToast('Network error', 'error'); });
+}
+
+function apiFormPost(path, formData, done, fail) {
+    formData.append('admin_token', ADMIN_TOKEN);
+    return $.ajax({
+        url: API_BASE + path,
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false
+    }).done(done || function(){}).fail(fail || function(){ showToast('Network error', 'error'); });
+}
+
+function apiFieldPost(path, fields, done, fail) {
+    fields.admin_token = ADMIN_TOKEN;
+    return $.post(API_BASE + path, fields)
+        .done(done || function(){})
+        .fail(fail || function(){ showToast('Network error', 'error'); });
+}
+
+// ════════════════════════════════════════════════
+//  TOAST & LAYOUT
+// ════════════════════════════════════════════════
+function showToast(msg, type = 'success') {
+    const icons = { success: '✓', error: '✗', warning: '!' };
+    const box   = document.getElementById('toast-box');
+    const t     = document.createElement('div');
+    t.className = `toast-item ${type}`;
+    t.innerHTML = `<span style="font-size:1.1rem;">${icons[type]||'i'}</span><span>${escapeHtml(msg)}</span>`;
+    box.appendChild(t);
+    setTimeout(() => t.classList.add('show'), 10);
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 4500);
+}
+
+function switchAdminTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════
+//  AUTH — TOTP PIN LOGIN
+// ════════════════════════════════════════════════
+let pinVal = "";
+
+function enterPin(v) {
+    document.getElementById('pin-error').textContent = '';
+    if (v === 'C') { pinVal = ""; }
+    else if (pinVal.length < 6) { pinVal += v; }
+    document.getElementById('pin-display').textContent = '●'.repeat(pinVal.length).padEnd(6, '─');
+    if (pinVal.length === 6) verifyAuth();
+}
+
+function verifyAuth() {
+    const totp = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(TOTP_SECRET) });
+    if (totp.validate({ token: pinVal, window: 1 }) !== null) {
+        sessionStorage.setItem('admin_ok', '1');
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        bootAdmin();
+    } else {
+        document.getElementById('pin-error').textContent = '✗ Incorrect code. Try again.';
+        pinVal = "";
+        document.getElementById('pin-display').textContent = '──────';
+    }
+}
+
+function logout() {
+    sessionStorage.removeItem('admin_ok');
+    location.reload();
+}
+
+window.addEventListener('keydown', e => {
+    if (document.getElementById('auth-screen').style.display === 'none') return;
+    if (e.key >= '0' && e.key <= '9') enterPin(e.key);
+    if (e.key === 'Backspace') enterPin('C');
+    if (e.key === 'Enter') verifyAuth();
+});
+
+// ════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════
+let allItems   = [];
+let uniqueEvts = new Set();
+let currentNasPath = '';
+const eventCoverMap = {};  // CHANGED: { event_name: cover_url } loaded from batch_cover.php
+
+function bootAdmin() {
+    fetchMedia();
+    startTelemetry();
+    loadNasFolders('');
+}
+
+// CHANGED: Fetch covers per event instead of per batch
+async function loadEventCovers(eventNames) {
+    for (let key in eventCoverMap) delete eventCoverMap[key]; // clear old
+    if (!eventNames || eventNames.length === 0) return;
+    
+    for (let evt of eventNames) {
+        try {
+            const res = await fetch(`${API_BASE}batch_cover.php?event_name=${encodeURIComponent(evt)}&admin_token=${encodeURIComponent(ADMIN_TOKEN)}`);
+            const data = await res.json();
+            if (data.success && data.cover) eventCoverMap[evt] = data.cover;
+        } catch(e) { /* non-fatal */ }
+    }
+}
+
+window.addEventListener('load', () => {
+    if (sessionStorage.getItem('admin_ok') === '1') {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+        bootAdmin();
+    }
+});
+
+// ════════════════════════════════════════════════
+//  TELEMETRY & CACHE 
+// ════════════════════════════════════════════════
+function startTelemetry() { updateTelemetry(); setInterval(updateTelemetry, 8000); }
+
+function toggleTrafficPanel() {
+    const panel   = document.getElementById('traffic-panel');
+    const chevron = document.getElementById('traffic-chevron');
+    const open    = panel.style.display === 'none';
+    panel.style.display   = open ? 'block' : 'none';
+    chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+function updateTelemetry() {
+    apiGet('system_stats.php', data => {
+        if (!data.success) return;
+
+        // ── Core stat cards ──────────────────────────────
+        $('#s-disk').text(data.disk + '%').toggleClass('stat-critical', data.disk > 95);
+        $('#s-cpu').text(data.cpu + '%');
+        $('#s-ram').text(data.ram + '%');
+        $('#s-traffic').text(data.traffic);
+        $('#s-cache').text(data.cache_display || '--');
+
+        // ── Traffic dashboard ────────────────────────────
+        const ts = data.traffic_stats;
+        if (!ts) return;
+
+        const load = ts.load_pct || 0;
+        const barColor = load < 50 ? 'var(--green)' : load < 80 ? '#f59e0b' : '#ef4444';
+        const dotColor = load < 50 ? '#22c55e'      : load < 80 ? '#f59e0b' : '#ef4444';
+
+        document.getElementById('t-load-bar').style.width      = load + '%';
+        document.getElementById('t-load-bar').style.background = barColor;
+        document.getElementById('t-load-pct').textContent      = load + '%';
+        document.getElementById('traffic-status-dot').style.background = dotColor;
+
+        document.getElementById('t-viewers').textContent   = ts.active_viewers   || 0;
+        document.getElementById('t-ips').textContent       = ts.active_ips       || 0;
+        document.getElementById('t-rpm').textContent       = ts.requests_per_min || 0;
+        document.getElementById('t-throttled').textContent = ts.throttled_ips    || 0;
+        document.getElementById('t-max-conc').textContent  = ts.max_concurrent   || 80;
+        document.getElementById('t-max-rpm').textContent   = ts.max_rpm          || 120;
+
+        // Summary badge in header
+        const statusText = load < 50 ? '🟢 Normal' : load < 80 ? '🟡 Busy' : '🔴 High Load';
+        $('#traffic-summary-badge').text(`${ts.active_viewers} viewers · ${ts.requests_per_min} req/min · ${statusText}`);
+
+        // Alert if throttled IPs > 0
+        if ((ts.throttled_ips || 0) > 0) {
+            document.getElementById('t-throttled').style.color = '#ef4444';
+            // Auto-open panel if throttling is active
+            if (document.getElementById('traffic-panel').style.display === 'none') {
+                toggleTrafficPanel();
+            }
+        } else {
+            document.getElementById('t-throttled').style.color = 'var(--muted)';
+        }
+    });
+}
+
+function cleanCache(btn) {
+    if (!confirm('Clear all cached thumbnails and ZIPs?')) return;
+    const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
+    apiGet('clear_cache.php', res => {
+        btn.innerHTML = orig; btn.disabled = false;
+        if (res.success) { showToast(res.message, 'success'); updateTelemetry(); }
+        else showToast('Failed to clean cache', 'error');
+    }, () => { btn.innerHTML = orig; btn.disabled = false; });
+}
+
+function findDuplicates() {
+    $('#duplicatesModal').modal('show');
+    loadDuplicates();
+}
+
+async function loadDuplicates() {
+    const body    = document.getElementById('dup-body');
+    const summary = document.getElementById('dup-summary');
+    body.innerHTML = `<div class="empty-state">
+        <i class="fas fa-spinner fa-spin fa-2x" style="margin-bottom:12px;color:var(--gold);"></i>
+        <div style="font-size:0.85rem;font-weight:600;color:var(--muted);">Scanning cache for duplicates…</div>
+    </div>`;
+    summary.textContent = '';
+
+    try {
+        const res  = await fetch(apiUrl('find_duplicates.php'));
+        const text = await res.text();
+
+        try {
+            const maybeJson = JSON.parse(text);
+            if (maybeJson && maybeJson.success === false) {
+                body.innerHTML = `<div class="empty-state" style="color:var(--red);">
+                    <i class="fas fa-lock fa-2x" style="margin-bottom:10px;"></i>
+                    <div>${escapeHtml(maybeJson.message || 'Unauthorized')}</div>
+                </div>`;
+                return;
+            }
+        } catch(e) {}
+
+        const lines = text.split('\n');
+        const totalLine  = lines.find(l => l.includes('Total Duplicate Files'));
+        const wastedLine = lines.find(l => l.includes('Total Wasted Storage'));
+        const totalDups  = totalLine  ? parseInt(totalLine.match(/\d+/)?.[0] || '0') : 0;
+        const wastedMB   = wastedLine ? wastedLine.split(':')[1]?.trim() : '0 MB';
+
+        summary.textContent = totalDups > 0 ? `${totalDups} duplicate(s) · ${wastedMB} wasted` : 'No duplicates found';
+
+        if (totalDups === 0) {
+            body.innerHTML = `<div class="empty-state" style="color:var(--green);"><i class="fas fa-check-circle fa-2x" style="margin-bottom:12px;"></i><div style="font-weight:700;font-size:1rem;">No duplicate files found!</div></div>`;
+            return;
+        }
+
+        const groups = [];
+        let current = null;
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('Identical copies found')) {
+                const sizeMatch = trimmed.match(/([\d.]+)\s*KB/);
+                current = { size: sizeMatch ? sizeMatch[1] + ' KB' : '?', files: [] };
+                groups.push(current);
+            } else if (trimmed.startsWith('->') && current) {
+                current.files.push(trimmed.replace('->', '').trim());
+            }
+        });
+
+        let html = `<div style="padding:4px 0 14px; display:flex; align-items:center; gap:12px; border-bottom:1px solid var(--border); margin-bottom:16px;">
+            <span style="background:#fee2e2;color:#991b1b;border-radius:6px;padding:6px 14px;font-weight:800;font-size:1rem;">${totalDups}</span>
+            <span style="font-size:0.88rem;color:var(--muted);">duplicate files found · <strong>${wastedMB}</strong> wasted space</span>
+        </div><div style="display:flex;flex-direction:column;gap:12px;">`;
+
+        groups.forEach((group, gi) => {
+            html += `<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                <div style="background:#f9fafb;padding:9px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);">
+                    <span style="font-weight:700;font-size:0.85rem;">Group ${gi + 1} — ${escapeHtml(group.size)} each</span>
+                    <span style="font-size:0.75rem;color:var(--muted);">${group.files.length} copies</span>
+                </div><div>`;
+            group.files.forEach((fname, fi) => {
+                const isFirst = fi === 0;
+                html += `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f3f4f6;font-size:0.82rem;font-family:'DM Mono',monospace;${isFirst ? 'background:#f0fdf4;' : ''}">
+                    <i class="fas ${isFirst ? 'fa-check-circle' : 'fa-copy'}" style="color:${isFirst ? 'var(--green)' : 'var(--muted)'};flex-shrink:0;"></i>
+                    <span style="flex:1;word-break:break-all;">${escapeHtml(fname)}</span>
+                    ${isFirst ? '<span style="font-size:0.72rem;background:#dcfce7;color:#166534;border-radius:4px;padding:2px 8px;font-family:DM Sans,sans-serif;font-weight:700;">KEEP</span>' : '<span style="font-size:0.72rem;background:#fee2e2;color:#991b1b;border-radius:4px;padding:2px 8px;font-family:DM Sans,sans-serif;font-weight:700;">DUPE</span>'}
+                </div>`;
+            });
+            html += `</div></div>`;
+        });
+        body.innerHTML = html + `</div>`;
+    } catch(e) { body.innerHTML = `<div class="empty-state" style="color:var(--red);">Failed to scan</div>`; }
+}
+
+// ════════════════════════════════════════════════
+//  UPLOAD PANEL
+// ════════════════════════════════════════════════
+let uploadPanelOpen = true;
+
+// ════════════════════════════════════════════════
+//  MAIN PAGE MANAGER
+// ════════════════════════════════════════════════
+let pmPanelOpen = false;
+
+function togglePageManager() {
+    pmPanelOpen = !pmPanelOpen;
+    document.getElementById('pm-panel').style.display = pmPanelOpen ? 'block' : 'none';
+    const ch = document.getElementById('pm-chevron');
+    if (ch) ch.style.transform = pmPanelOpen ? 'rotate(180deg)' : '';
+    if (pmPanelOpen) loadPageSettings();
+}
+
+function loadPageSettings() {
+    apiGet('page_settings.php', data => {
+        if (!data.success || !data.settings) return;
+        const s = data.settings;
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+        set('pm-hero-tag',     s.hero_tag);
+        set('pm-hero-title',   s.hero_title);
+        set('pm-hero-subtitle',s.hero_subtitle);
+        set('pm-about-title',  s.about_title);
+        set('pm-about-text',   s.about_text);
+        set('pm-stat-years',   s.stat_years);
+        set('pm-stat-clients', s.stat_clients);
+        set('pm-phone',        s.phone);
+        set('pm-email',        s.email);
+        set('pm-address',      s.address);
+        set('pm-hours',        s.hours);
+        set('pm-wa-number',    s.wa_number);
+        set('pm-formspree',    s.formspree_id);
+        set('pm-footer-text',  s.footer_text);
+    });
+}
+
+async function savePageSettings() {
+    const get = id => (document.getElementById(id)?.value || '').trim();
+    const settings = {
+        hero_tag:      get('pm-hero-tag'),
+        hero_title:    get('pm-hero-title'),
+        hero_subtitle: get('pm-hero-subtitle'),
+        about_title:   get('pm-about-title'),
+        about_text:    get('pm-about-text'),
+        stat_years:    get('pm-stat-years'),
+        stat_clients:  get('pm-stat-clients'),
+        phone:         get('pm-phone'),
+        email:         get('pm-email'),
+        address:       get('pm-address'),
+        hours:         get('pm-hours'),
+        wa_number:     get('pm-wa-number'),
+        formspree_id:  get('pm-formspree'),
+        footer_text:   get('pm-footer-text'),
+    };
+
+    const lbl    = document.getElementById('pm-save-label');
+    const status = document.getElementById('pm-status');
+    if (lbl) lbl.textContent = 'Saving…';
+
+    apiPost('page_settings.php', settings, res => {
+        if (lbl) lbl.textContent = 'Save Changes to Website';
+        if (res.success) {
+            showToast('✓ Website settings saved!', 'success');
+            if (status) { status.style.display = 'block'; status.style.color = 'var(--green)'; status.textContent = '✓ Changes are now live on the main site.'; }
+        } else {
+            showToast(res.message || 'Save failed', 'error');
+            if (status) { status.style.display = 'block'; status.style.color = '#ef4444'; status.textContent = '✗ ' + (res.message || 'Save failed'); }
+        }
+    });
+}
+
+function toggleUploadPanel() {
+    uploadPanelOpen = !uploadPanelOpen;
+    $('#upload-panel').toggle(uploadPanelOpen);
+    $('#upload-chevron').toggleClass('fa-chevron-down fa-chevron-up');
+}
+
+let currentType = 'link';
+
+function switchType(type, btn) {
+    currentType = type;
+    document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    ['area-link','area-work','area-album','area-video'].forEach(id => document.getElementById(id).style.display = 'none');
+
+    const labels = {
+        link:   ['🔗 Link NAS Folder','🔗 LINK SELECTED FOLDERS'],
+        work:   ['⬆️ Upload Photos','⬆️ UPLOAD & COPY TO NAS'],
+        album:  ['📘 Save Album','📘 SAVE ALBUM'],
+        teaser: ['🎥 Teaser Video','🎥 SAVE TEASER'],
+        live:   ['📡 Live Event','📡 SAVE LIVE EVENT'],
+    };
+
+    const [, btnLabel] = labels[type] || ['Submit','SUBMIT'];
+    document.getElementById('submit-label').textContent = btnLabel.replace(/^[^\s]+\s/, '');
+
+    if (type === 'link')   document.getElementById('area-link').style.display = 'block';
+    if (type === 'work')   document.getElementById('area-work').style.display = 'block';
+    if (type === 'album')  document.getElementById('area-album').style.display = 'block';
+    if (type === 'teaser' || type === 'live') {
+        document.getElementById('area-video').style.display = 'block';
+        document.getElementById('yt-label').textContent = type === 'live' ? 'YouTube Live URL' : 'YouTube Teaser URL';
+    }
+}
+
+function onEventChange() {
+    const isNew = $('#eventSelector').val() === '__NEW__';
+    $('#newEventArea').toggle(isNew);
+}
+
+function getEventTitle() {
+    const sel = $('#eventSelector').val();
+    if (sel === '__NEW__') return $('#newEventName').val().trim();
+    return sel;
+}
+
+function onFilesChosen(input) {
+    const count = input.files.length;
+    const lbl   = document.getElementById('drop-label');
+    const zone  = document.getElementById('drop-zone');
+
+    // Remove old preview strip if any
+    const oldStrip = document.getElementById('file-preview-strip');
+    if (oldStrip) oldStrip.remove();
+
+    if (count === 0) {
+        lbl.innerHTML = 'Click to choose photos or drag & drop here';
+        return;
+    }
+
+    // Update label
+    const totalSize = [...input.files].reduce((acc, f) => acc + f.size, 0);
+    const sizeMB    = (totalSize / 1048576).toFixed(1);
+    lbl.innerHTML = `<span style="color:var(--green);font-size:1rem;">✓</span> <strong>${count}</strong> photo${count>1?'s':''} selected <span style="color:var(--muted);font-size:0.8rem;">(${sizeMB} MB)</span>`;
+
+    // Build thumbnail preview strip (max 10 shown)
+    const strip = document.createElement('div');
+    strip.id = 'file-preview-strip';
+    strip.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px;';
+
+    const shown = Math.min(count, 10);
+    for (let i = 0; i < shown; i++) {
+        const img = document.createElement('img');
+        img.style.cssText = 'width:52px;height:52px;object-fit:cover;border-radius:6px;border:2px solid var(--border);';
+        img.src = URL.createObjectURL(input.files[i]);
+        img.onload = () => URL.revokeObjectURL(img.src);
+        strip.appendChild(img);
+    }
+    if (count > 10) {
+        const more = document.createElement('div');
+        more.style.cssText = 'width:52px;height:52px;border-radius:6px;background:#1a1a1a;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:0.75rem;font-weight:700;';
+        more.textContent = '+' + (count - 10);
+        strip.appendChild(more);
+    }
+    zone.appendChild(strip);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dz = document.getElementById('drop-zone');
+    if (!dz) return;
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--gold)'; });
+    dz.addEventListener('dragleave', () => { dz.style.borderColor = 'var(--border)'; });
+    dz.addEventListener('drop', e => {
+        e.preventDefault(); dz.style.borderColor = 'var(--border)';
+        const dt = new DataTransfer();
+        [...e.dataTransfer.files].forEach(f => dt.items.add(f));
+        document.getElementById('photo-input').files = dt.files;
+        onFilesChosen(document.getElementById('photo-input'));
+    });
+});
+
+async function fetchYouTubeTitle() {
+    const url = $('#yt-url').val().trim();
+    if (!url) return showToast('Enter a YouTube URL first', 'warning');
+    const preview = document.getElementById('yt-preview');
+    preview.style.display = 'block';
+    preview.textContent = 'Fetching title...';
+    try {
+        const res = await $.get(apiUrl('fetch_title.php') + '&url=' + encodeURIComponent(url));
+        if (res.title) {
+            preview.textContent = '✓ ' + res.title;
+            preview.style.color = 'var(--green)';
+            if ($('#eventSelector').val() === '__NEW__' && !$('#newEventName').val().trim()) $('#newEventName').val(res.title);
+        } else {
+            preview.textContent = '⚠ Could not fetch title automatically.';
+            preview.style.color = 'var(--muted)';
+        }
+    } catch(e) { preview.textContent = 'Error fetching title.'; preview.style.color = 'var(--red)'; }
+}
+
+function clearYtPreview() { document.getElementById('yt-preview').style.display = 'none'; }
+function setSubmitLoading(msg) { $('#submit-btn').prop('disabled', true).html(`<i class="fas fa-spinner fa-spin"></i> ${msg}`); }
+function resetSubmitBtn(label) { $('#submit-btn').prop('disabled', false).html(`<i class="fas fa-bolt" style="color:var(--gold);"></i> ${label}`); }
+
+async function handleSubmit() {
+    const title = getEventTitle();
+    if (!title) return showToast('Please select or enter an event name.', 'warning');
+    const visibility = $('#visSelect').val();
+
+    if (currentType === 'link') {
+        const checked = [...document.querySelectorAll('.fb-cb-item:checked')].map(cb => cb.value);
+        if (checked.length === 0) return showToast('Select at least one folder.', 'warning');
+
+        setSubmitLoading(`Linking ${checked.length} folder(s)...`);
+        document.getElementById('upload-progress').style.display = 'block';
+
+        let ok = 0, fail = [];
+        for (let i = 0; i < checked.length; i++) {
+            const folder = checked[i];
+            document.getElementById('upload-fill').style.width = ((i + 1) / checked.length * 100) + '%';
+            document.getElementById('upload-status').textContent = `Processing ${i + 1}/${checked.length}: ${folder.split('/').pop()}`;
+            try {
+                const res = await $.post(apiUrl('link_folder.php'), { title, folder_path: folder, visibility });
+                if (res.success) ok++; else fail.push(folder.split('/').pop());
+            } catch(e) { fail.push(folder.split('/').pop() + ' (error)'); }
+        }
+
+        document.getElementById('upload-progress').style.display = 'none';
+        document.getElementById('upload-status').textContent = '';
+        resetSubmitBtn('LINK SELECTED FOLDERS');
+
+        if (fail.length > 0) showToast(`Linked ${ok}. Failed: ${fail.join(', ')}`, 'warning');
+        else showToast(`Successfully linked all ${ok} folder(s)!`, 'success');
+        fetchMedia();
+        return;
+    }
+
+    if (currentType === 'work') {
+        const files = document.getElementById('photo-input').files;
+        if (!files || files.length === 0) return showToast('Choose at least one photo.', 'warning');
+
+        setSubmitLoading(`Uploading ${files.length} photo(s)...`);
+        document.getElementById('upload-progress').style.display = 'block';
+
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('type', 'work');
+        fd.append('visibility', visibility);
+        [...files].forEach(f => fd.append('media_file[]', f));
+
+        apiFormPost('upload.php', fd, res => {
+            document.getElementById('upload-progress').style.display = 'none';
+            document.getElementById('upload-status').textContent = '';
+            resetSubmitBtn('UPLOAD & COPY TO NAS');
+            if (res.success) { showToast(res.message, 'success'); fetchMedia(); document.getElementById('photo-input').value = ''; document.getElementById('drop-label').textContent = 'Click to choose photos or drag & drop here'; const _ps=document.getElementById('file-preview-strip'); if(_ps)_ps.remove(); }
+            else showToast(res.message || 'Upload failed', 'error');
+        }, () => { resetSubmitBtn('UPLOAD & COPY TO NAS'); showToast('Upload failed — check server.', 'error'); });
+        return;
+    }
+
+    if (currentType === 'album') {
+        const url = $('#album-url').val().trim();
+        const coverFile = document.getElementById('album-cover').files[0];
+        if (!url && !coverFile) return showToast('Provide a PDF URL or cover image.', 'warning');
+        setSubmitLoading('Saving album...');
+
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('type', 'album');
+        fd.append('visibility', visibility);
+        if (url) fd.append('pdf_link', url);
+        if (coverFile) fd.append('cover_image', coverFile);
+
+        apiFormPost('upload.php', fd, res => {
+            resetSubmitBtn('SAVE ALBUM');
+            if (res.success) { showToast('Album saved!', 'success'); fetchMedia(); $('#album-url').val(''); document.getElementById('album-cover').value = ''; }
+            else showToast(res.message || 'Failed to save album', 'error');
+        });
+        return;
+    }
+
+    if (currentType === 'teaser' || currentType === 'live') {
+        const ytUrl = $('#yt-url').val().trim();
+        if (!ytUrl) return showToast('Paste a YouTube URL.', 'warning');
+        setSubmitLoading('Saving video...');
+
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('type', currentType);
+        fd.append('visibility', visibility);
+        fd.append('youtube_link', ytUrl);
+        fd.append('video_category', currentType === 'live' ? 'Live' : 'Teaser');
+
+        apiFormPost('upload.php', fd, res => {
+            resetSubmitBtn(currentType === 'live' ? 'SAVE LIVE EVENT' : 'SAVE TEASER');
+            if (res.success) { showToast('Video saved!', 'success'); fetchMedia(); $('#yt-url').val(''); clearYtPreview(); }
+            else showToast(res.message || 'Failed to save video', 'error');
+        });
+        return;
+    }
+}
+
+// ════════════════════════════════════════════════
+//  NAS FOLDER BROWSER
+// ════════════════════════════════════════════════
+function loadNasFolders(path) {
+    currentNasPath = path;
+    $('#fb-path').text('/' + path);
+    $('#fb-back-btn').prop('disabled', path === '');
+    $('#fb-list').html('<div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div>');
+    $('#fb-select-all').prop('checked', false);
+    updateFolderSelCount();
+
+    apiGet('list_folders.php?path=' + encodeURIComponent(path), res => {
+        if (!res.success) { $('#fb-list').html('<div class="empty-state text-danger">Failed to load folders.</div>'); return; }
+        if (res.folders.length === 0) { $('#fb-list').html('<div class="empty-state">This folder is empty.</div>'); return; }
+
+        let html = '';
+        res.folders.forEach((f, i) => {
+            html += `<div class="fb-item folder-entry" data-name="${escapeHtml(f.name.toLowerCase())}">
+                <div class="fb-name" onclick="loadNasFolders('${escapeHtml(f.path)}')" style="flex:1;">
+                    <i class="fas fa-folder" style="color:#d97706;"></i> ${escapeHtml(f.name)}
+                </div>
+                <input type="checkbox" class="fb-cb fb-cb-item" value="${escapeHtml(f.path)}" onchange="updateFolderSelCount()" style="margin-left:10px;">
+            </div>`;
+        });
+        $('#fb-list').html(html);
+    });
+}
+
+function folderUp() { const parts = currentNasPath.split('/').filter(Boolean); parts.pop(); loadNasFolders(parts.join('/')); }
+function filterFolders() { const q = $('#fb-search').val().toLowerCase(); document.querySelectorAll('.folder-entry').forEach(el => { el.style.display = (el.dataset.name || '').includes(q) ? '' : 'none'; }); }
+function selectAllFolders() { const checked = document.getElementById('fb-select-all').checked; document.querySelectorAll('.fb-cb-item:not([style*="display: none"])').forEach(cb => cb.checked = checked); updateFolderSelCount(); }
+function updateFolderSelCount() { document.getElementById('fb-sel-count').textContent = document.querySelectorAll('.fb-cb-item:checked').length + ' selected'; }
+
+// ════════════════════════════════════════════════
+//  FETCH MEDIA
+// ════════════════════════════════════════════════
+function fetchMedia() {
+    const filter = $('#type-filter').val();
+    $('#media-container').html('<div class="empty-state"><i class="fas fa-spinner fa-spin fa-2x"></i></div>');
+    apiGet(`fetch.php?mode=admin&type=${encodeURIComponent(filter)}`, async res => {
+        allItems = res.data || [];
+        uniqueEvts.clear();
+        
+        // CHANGED: Load event covers instead of batch covers
+        const eventNames = [...new Set(allItems.map(i => i.title || 'Unnamed'))];
+        await loadEventCovers(eventNames);
+        
+        renderEvents(allItems);
+        populateEventDropdown();
+    }, () => { $('#media-container').html('<div class="empty-state text-danger">Failed to load events.</div>'); });
+}
+
+function populateEventDropdown() {
+    let html = '<option value="__NEW__">➕ Create New Event...</option>';
+    [...uniqueEvts].sort().forEach(e => { html += `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`; });
+    $('#eventSelector').html(html);
+    onEventChange();
+}
+
+function filterEvents() {
+    const q = $('#event-search').val().toLowerCase();
+    document.querySelectorAll('.event-group').forEach(el => {
+        el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+}
+
+// ════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  RENDER EVENTS GRID
+// ════════════════════════════════════════════════
+let currentEventRenderIdx = 0;
+let adminEventsMap = {};
+let adminEventNamesArr = [];
+
+function renderEvents(items) {
+    if (!items || items.length === 0) {
+        $('#media-container').html('<div class="empty-state">No events found. Add content above.</div>');
+        return;
+    }
+
+    adminEventsMap = {};
+    items.forEach(item => {
+        const key = item.title || 'Unnamed';
+        uniqueEvts.add(key);
+        if (!adminEventsMap[key]) adminEventsMap[key] = { batches: {}, singles: [] };
+
+        if ((item.type === 'work' || item.type === 'link') && item.batch_id) {
+            if (!adminEventsMap[key].batches[item.batch_id]) adminEventsMap[key].batches[item.batch_id] = [];
+            adminEventsMap[key].batches[item.batch_id].push(item);
+        } else {
+            adminEventsMap[key].singles.push(item);
+        }
+    });
+
+    adminEventNamesArr = Object.keys(adminEventsMap);
+    currentEventRenderIdx = 0;
+    
+    document.getElementById('media-container').innerHTML = '';
+    renderEventsChunk();
+}
+
+function renderEventsChunk() {
+    if (currentEventRenderIdx >= adminEventNamesArr.length) {
+        filterEvents();
+        initSortable();
+        return;
+    }
+
+    const chunk = adminEventNamesArr.slice(currentEventRenderIdx, currentEventRenderIdx + 5);
+    const frag = document.createDocumentFragment();
+
+    chunk.forEach(evtName => {
+        const evt = adminEventsMap[evtName];
+        const safeClick = evtName.replace(/'/g, "\\'");
+        
+        const div = document.createElement('div');
+        div.className = 'event-group';
+        div.dataset.event = evtName.toLowerCase();
+
+        let innerHtml = `
+        <div class="event-head">
+            <div class="event-name">
+                <i class="fas fa-star" style="color:var(--gold);"></i>
+                ${escapeHtml(evtName)}
+            </div>
+            <div class="event-btns">
+                <button class="ab ab-cover ${eventCoverMap && eventCoverMap[evtName] ? 'active' : ''}" onclick="openCoverPicker('${safeClick}')">
+                    <i class="fas fa-image"></i> ${eventCoverMap && eventCoverMap[evtName] ? '✓ Event Cover' : 'Event Cover'}
+                </button>
+                <button class="ab ab-rename" onclick="renameEvent('${safeClick}')"><i class="fas fa-edit"></i> Rename</button>
+                <button class="ab ab-copy" onclick="copyLink('${safeClick}')"><i class="fas fa-link"></i> Copy Link</button>
+                ${Object.keys(evt.batches).length > 0 ? `<button class="ab ab-sync" onclick="syncAllFolders(this,'${safeClick}')"><i class="fas fa-sync-alt"></i> Sync All</button>` : ''}
+            </div>
+        </div>
+        <div class="event-sortable" style="padding:12px;">`;
+
+        Object.keys(evt.batches).forEach(bId => {
+            const bItems = evt.batches[bId];
+            const pathParts = (bItems[0].file_path || '').split('/');
+            const folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : bItems[0].title;
+            const isVis    = bItems.some(i => i.visibility === 'public');
+            const dlState  = bItems.reduce((m, i) => Math.max(m, parseInt(i.can_download) || 0), 0);
+            const safeB    = escapeHtml(bId);
+            const safePath = escapeHtml(bItems[0].file_path || '').replace(/'/g, "\\'");
+            const safeVis  = isVis ? 'public' : 'private';
+
+            const dlBtn = dlBtnHtml(null, bId, dlState);
+            const visBtn = visBtnHtml(null, bId, isVis);
+
+            innerHtml += `
+            <div class="batch-card sortable-item" data-id="${safeB}">
+                <div class="batch-head" onclick="toggleBatch('${safeB}')">
+                    <div class="batch-info">
+                        <i class="fas fa-grip-lines drag-handle" onclick="event.stopPropagation()"></i>
+                        <i class="fas fa-folder-open" style="color:#d97706; font-size:1.4rem;"></i>
+                        <div>
+                            <div class="batch-name">${escapeHtml(folderName)}</div>
+                            <div class="batch-count">${bItems.length} Photos</div>
+                        </div>
+                    </div>
+                    <div class="batch-btns" onclick="event.stopPropagation()">
+                        <button class="ab ab-sync" onclick="syncFolder('${safeB}','${safePath}','${escapeHtml(safeClick)}','${safeVis}', this)"><i class="fas fa-sync-alt"></i> Sync</button>
+                        ${visBtn}
+                        ${dlBtn}
+                        <button class="ab ab-del" onclick="deleteBatch('${safeB}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <div id="b-${safeB}" style="display:none; border-top:1px solid var(--border);">`;
+
+            bItems.slice(0, 12).forEach(item => { innerHtml += mediaRowHtml(item); });
+            if (bItems.length > 12) innerHtml += `<div style="padding:10px; text-align:center; font-size:0.8rem; color:var(--muted); font-weight:600;">+ ${bItems.length - 12} more photos</div>`;
+
+            innerHtml += `</div></div>`;
+        });
+
+        if (evt.singles.length > 0) {
+            innerHtml += `<div class="singles-divider">Albums, Videos & Singles</div>`;
+            evt.singles.forEach(s => { innerHtml += `<div class="sortable-item" data-id="${escapeHtml(s.id)}">${mediaRowHtml(s, true)}</div>`; });
+        }
+
+        innerHtml += `</div></div>`;
+        div.innerHTML = innerHtml;
+        frag.appendChild(div);
+    });
+
+    document.getElementById('media-container').appendChild(frag);
+    
+    currentEventRenderIdx += 5;
+    setTimeout(renderEventsChunk, 15);
+}
+
+function toggleBatch(bId) {
+    const el = document.getElementById('b-' + bId);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ════════════════════════════════════════════════
+//  EVENT COVER PHOTO MANAGEMENT
+// ════════════════════════════════════════════════
+
+// CHANGED: Works on event_name instead of batch_id
+async function setCoverPhoto(eventName, fileUrl, btn) {
+    const already = eventCoverMap[eventName] === fileUrl;
+    if (already) {
+        if (!confirm('Clear event cover? A random photo will be used instead.')) return;
+    }
+
+    const origHtml = btn.innerHTML;
+    btn.innerHTML  = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled   = true;
+
+    try {
+        const payload = already
+            ? { admin_token: ADMIN_TOKEN, event_name: eventName, clear: true }
+            : { admin_token: ADMIN_TOKEN, event_name: eventName, cover_path: fileUrl };
+
+        const res  = await fetch(API_BASE + 'batch_cover.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            if (already) {
+                delete eventCoverMap[eventName];
+                showToast('Event cover cleared.', 'success');
+            } else {
+                eventCoverMap[eventName] = fileUrl;
+                showToast('✓ Event cover photo set!', 'success');
+            }
+            btn.innerHTML = origHtml;
+            btn.disabled  = false;
+            refreshCoverButtons(eventName);
+        } else {
+            showToast('Failed: ' + (data.message || 'Unknown error'), 'error');
+            btn.innerHTML = origHtml;
+            btn.disabled  = false;
+        }
+    } catch(e) {
+        showToast('Network error. Please try again.', 'error');
+        btn.innerHTML = origHtml;
+        btn.disabled  = false;
+    }
+}
+
+// CHANGED: Triggered from Event Header
+function openCoverPicker(eventName) {
+    const hasCover = !!eventCoverMap[eventName];
+    if (hasCover) {
+        if (confirm('This event already has a cover photo set.\n\nClick OK to clear it (revert to random photo), or Cancel to keep it.')) {
+            clearCoverPhoto(eventName);
+        }
+    } else {
+        showToast(`📸 Click the ★ button on any photo inside the folders to set it as the Event Cover.`, 'info');
+
+        const eventDiv = [...document.querySelectorAll('.event-group')].find(el => el.dataset.event === eventName.toLowerCase());
+        if(eventDiv) {
+            const allCoverBtns = eventDiv.querySelectorAll('.ab-cover[data-file]');
+            allCoverBtns.forEach(b => {
+                b.style.outline = '2px solid var(--gold)';
+                b.style.transform = 'scale(1.05)';
+                setTimeout(() => { b.style.outline = ''; b.style.transform = ''; }, 2500);
+            });
+        }
+    }
+}
+
+// CHANGED: Clears Event Cover
+async function clearCoverPhoto(eventName) {
+    try {
+        const res  = await fetch(API_BASE + 'batch_cover.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ admin_token: ADMIN_TOKEN, event_name: eventName, clear: true })
+        });
+        const data = await res.json();
+        if (data.success) {
+            delete eventCoverMap[eventName];
+            showToast('Event cover cleared.', 'info');
+            refreshCoverButtons(eventName);
+        }
+    } catch(e) { showToast('Failed to clear cover.', 'error'); }
+}
+
+// CHANGED: Refreshes buttons specific to the Event
+function refreshCoverButtons(eventName) {
+    const activeUrl = eventCoverMap[eventName];
+    const eventDiv = [...document.querySelectorAll('.event-group')].find(el => el.dataset.event === eventName.toLowerCase());
+    if (!eventDiv) return;
+
+    // Update event header button
+    const headerBtn = eventDiv.querySelector('.event-head .ab-cover');
+    if (headerBtn) {
+        headerBtn.classList.toggle('active', !!activeUrl);
+        headerBtn.innerHTML = `<i class="fas fa-image"></i> ${activeUrl ? '✓ Event Cover' : 'Event Cover'}`;
+    }
+
+    // Update per-photo ★ buttons inside this event
+    eventDiv.querySelectorAll('.ab-cover[data-file]').forEach(b => {
+        const isActive = b.getAttribute('data-file') === activeUrl;
+        b.classList.toggle('active', isActive);
+        b.innerHTML = `<i class="fas fa-star"></i>`;
+        b.title = isActive ? 'Current event cover — click to clear' : 'Use this photo as event cover';
+    });
+}
+
+function mediaRowHtml(item, isDraggable = false) {
+    const isVis = item.visibility === 'public';
+    const dlState = parseInt(item.can_download) || 0;
+    const fname = item.title_from_filename || (item.file_path || '').split('/').pop();
+    const sid = escapeHtml(String(item.id));
+    const title = item.title || 'Unnamed'; // Used for Event Name matching
+
+    let thumbHtml = '';
+    if (item.type === 'album') {
+        thumbHtml = `<div class="m-thumb-icon" style="background:#dcfce7;"><i class="fas fa-book" style="color:#059669;"></i></div>`;
+    } else if (item.type === 'teaser' || item.type === 'live') {
+        thumbHtml = `<div class="m-thumb-icon" style="background:#1f2937;"><i class="fas fa-play" style="color:#9ca3af;"></i></div>`;
+    } else {
+        const thumbUrl = `${API_BASE}serve_image.php?file=${encodeURIComponent(item.file_path || '')}&thumb=1`;
+        thumbHtml = `<img class="m-thumb" src="${thumbUrl}" onclick="previewImage('${escapeHtml(thumbUrl).replace('&thumb=1','')}','${escapeHtml(fname)}')" loading="lazy">`;
+    }
+
+    const typeLabel = { work:'IMAGE', link:'IMAGE', album:'ALBUM', teaser:'TEASER', live:'LIVE' }[item.type] || item.type.toUpperCase();
+    const dragHandle = isDraggable ? `<i class="fas fa-grip-lines drag-handle"></i>` : '';
+    
+    // CHANGED: Cover button now references eventCoverMap
+    const coverBtn = (item.type === 'work' || item.type === 'link')
+        ? `<button class="ab ab-cover ${eventCoverMap[title] === item.file_path ? 'active' : ''}"
+               data-file="${escapeHtml(item.file_path)}"
+               title="${eventCoverMap[title] === item.file_path ? 'Current event cover — click to clear' : 'Use this photo as event cover'}"
+               onclick="setCoverPhoto('${escapeHtml(title)}','${escapeHtml(item.file_path)}',this)"><i class="fas fa-star"></i></button>`
+        : '';
+
+    return `<div class="media-row" ${isDraggable ? `data-id="${sid}"` : ''}>
+        ${dragHandle}${thumbHtml}
+        <div class="m-info"><div class="m-name">${escapeHtml(fname)}</div><div class="m-type">${typeLabel}</div></div>
+        <div class="m-btns">
+            ${coverBtn}
+            ${visBtnHtml(item.id, null, isVis)}
+            ${dlBtnHtml(item.id, null, dlState)}
+            <button class="ab ab-del" onclick="deleteItem('${sid}')"><i class="fas fa-trash"></i></button>
+        </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+//  BUTTON HELPERS
+// ════════════════════════════════════════════════
+function visBtnHtml(id, batchId, isVis) {
+    const next = isVis ? 'private' : 'public';
+    const idArg = id ? `'${escapeHtml(String(id))}'` : 'null';
+    const bArg  = batchId ? `'${escapeHtml(String(batchId))}'` : 'null';
+    return `<button class="ab ${isVis ? 'ab-vis-on' : 'ab-vis-off'}" onclick="toggleVis(${idArg},${bArg},'${next}')">
+        <i class="fas ${isVis ? 'fa-eye' : 'fa-eye-slash'}"></i> ${isVis ? 'Visible' : 'Hidden'}
+    </button>`;
+}
+
+function dlBtnHtml(id, batchId, state) {
+    const next = state === 0 ? 2 : (state === 2 ? 1 : 0);
+    const cls  = state === 2 ? 'ab-dl-slow' : (state === 1 ? 'ab-dl-on' : 'ab-dl-off');
+    const icon = state === 2 ? 'fa-star' : (state === 1 ? 'fa-check' : 'fa-ban');
+    const lbl  = state === 2 ? 'Original Only' : (state === 1 ? 'DL: All' : 'DL: Off');
+    const idArg = id ? `'${escapeHtml(String(id))}'` : 'null';
+    const bArg  = batchId ? `'${escapeHtml(String(batchId))}'` : 'null';
+    return `<button class="ab ${cls}" onclick="toggleDL(${idArg},${bArg},${next})">
+        <i class="fas ${icon}"></i> ${lbl}
+    </button>`;
+}
+
+// ════════════════════════════════════════════════
+//  ACTIONS
+// ════════════════════════════════════════════════
+function copyLink(evtName) {
+    navigator.clipboard.writeText(`${VIEW_BASE}?event=${encodeURIComponent(evtName)}`)
+        .then(() => showToast('Portal link copied!', 'success'));
+}
+
+function previewImage(url, title) {
+    $('#preview-img').attr('src', url);
+    $('#preview-title').text(title);
+    $('#previewModal').modal('show');
+}
+
+function toggleVis(id, batchId, status) {
+    const data = { visibility: status };
+    if (id) data.id = id; else data.batch_id = batchId;
+    apiPost('update_visibility.php', data, res => {
+        if (res.success) { showToast(`Set to ${status}`, 'success'); fetchMedia(); }
+        else showToast(res.message || 'Failed', 'error');
+    });
+}
+
+function toggleDL(id, batchId, nextState) {
+    const data = { can_download: nextState };
+    if (id) data.id = id; else data.batch_id = batchId;
+    apiPost('update_permission.php', data, res => {
+        if (res.success) { showToast('Download permission updated', 'success'); fetchMedia(); }
+        else showToast(res.message || 'Failed', 'error');
+    });
+}
+
+
+// ── Admin action confirmation with PIN ────────────────────────────
+function confirmAdminAction(message, onConfirm) {
+    const ep = document.getElementById('admin-confirm-modal');
+    if (ep) ep.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'admin-confirm-modal';
+    modal.innerHTML = `
+        <div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;">
+            <div style="background:#fff;border-radius:14px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <div style="text-align:center;margin-bottom:16px;">
+                    <div style="width:48px;height:48px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;"><i class="fas fa-trash" style="color:#ef4444;font-size:1.2rem;"></i></div>
+                    <div style="font-weight:700;font-size:0.95rem;color:#111;margin-bottom:6px;">Confirm Delete</div>
+                    <div style="font-size:0.82rem;color:#6b7280;">${message}</div>
+                </div>
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:0.78rem;font-weight:600;color:#374151;margin-bottom:6px;">Enter your current Google Authenticator code:</div>
+                    <input type="text" id="confirm-pin-input" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                        style="width:100%;padding:10px 12px;border:1.5px solid #d1d5db;border-radius:8px;font-size:1.4rem;text-align:center;letter-spacing:0.4em;font-family:monospace;"
+                        onkeydown="if(event.key==='Enter')document.getElementById('confirm-pin-ok').click()"
+                        oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)">
+                    <div id="confirm-pin-error" style="color:#ef4444;font-size:0.75rem;margin-top:6px;display:none;line-height:1.4;">❌ Wrong code. Open Google Authenticator and enter the current 6-digit code.</div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button onclick="document.getElementById('admin-confirm-modal').remove()" style="flex:1;padding:10px;background:#f3f4f6;border:none;border-radius:8px;cursor:pointer;font-weight:600;color:#374151;font-size:0.85rem;font-family:inherit;">Cancel</button>
+                    <button id="confirm-pin-ok" onclick="verifyConfirmPin()" style="flex:1;padding:10px;background:#ef4444;border:none;border-radius:8px;cursor:pointer;font-weight:700;color:#fff;font-size:0.85rem;font-family:inherit;">Delete</button>
+                </div>
+            </div>
+        </div>`;
+    modal.dataset.callback = '1';
+    document.body.appendChild(modal);
+    document.getElementById('confirm-pin-input').focus();
+
+    // Store callback
+    window._adminConfirmCallback = onConfirm;
+}
+
+function verifyConfirmPin() {
+    const input = document.getElementById('confirm-pin-input');
+    const errEl = document.getElementById('confirm-pin-error');
+    const typed = (input ? input.value : '').trim();
+
+    if (!typed) { if (input) input.focus(); return; }
+
+    // Validate as a FRESH Google Authenticator TOTP code — same logic as login
+    // This means the user types their current 6-digit code from Google Authenticator
+    let ok = false;
+    try {
+        const totp = new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(TOTP_SECRET) });
+        ok = totp.validate({ token: typed, window: 1 }) !== null;
+    } catch(e) { ok = false; }
+
+    if (ok) {
+        document.getElementById('admin-confirm-modal')?.remove();
+        if (typeof window._adminConfirmCallback === 'function') window._adminConfirmCallback();
+    } else {
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ Wrong code. Open Google Authenticator and enter the current 6-digit code.'; }
+        if (input)  { input.value = ''; input.focus(); }
+    }
+}
+
+function deleteBatch(batchId) {
+    confirmAdminAction('Delete this entire folder? All links will be removed. This cannot be undone.', () => {
+        apiFieldPost('delete.php', { batch_id: batchId }, res => {
+            if (res.success) { showToast('Folder deleted', 'success'); fetchMedia(); updateTelemetry(); }
+            else showToast('Delete failed', 'error');
+        });
+    });
+}
+
+function deleteItem(id) {
+    confirmAdminAction('Delete this item? This cannot be undone.', () => {
+        apiFieldPost('delete.php', { id }, res => {
+            if (res.success) { showToast('Item deleted', 'success'); fetchMedia(); updateTelemetry(); }
+            else showToast('Delete failed', 'error');
+        });
+    });
+}
+
+function renameEvent(oldTitle) {
+    const newTitle = prompt(`Rename "${oldTitle}" to:`, oldTitle);
+    if (!newTitle || newTitle.trim() === '' || newTitle.trim() === oldTitle) return;
+
+    apiPost('update_title.php', { action: 'rename_event', old_title: oldTitle, new_title: newTitle.trim() }, res => {
+        if (res.success) {
+            showToast(res.message, 'success');
+            fetchMedia();
+        } else if (res.confirm_needed) {
+            const confirmed = confirm(
+                `⚠ Warning\n\n${res.message}\n\nDo you want to rename ALL ${res.affected_events} events named "${oldTitle}"?\n\nClick OK to confirm, or Cancel to go back.`
+            );
+            if (confirmed) {
+                apiPost('update_title.php', { action: 'rename_event', old_title: oldTitle, new_title: newTitle.trim(), force: true }, r2 => {
+                    if (r2.success) { showToast(r2.message, 'success'); fetchMedia(); }
+                    else showToast(r2.message || 'Rename failed', 'error');
+                });
+            }
+        } else {
+            showToast(res.message || 'Rename failed', 'error');
+        }
+    });
+}
+
+function syncFolder(batchId, samplePath, eventTitle, visibility, btn) {
+    if (!confirm('Re-scan NAS folder? Current links will be refreshed.')) return;
+
+    let cleanPath = samplePath.replace(/https?:\/\/supriyadigitals\.store\//i, '');
+    cleanPath = cleanPath.replace(/^(Kalyani|supriya_studio)\//i, '');
+    const parts = cleanPath.split('/');
+    parts.pop();
+    const folderPath = parts.join('/');
+
+    const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...'; btn.disabled = true;
+
+    apiFieldPost('delete.php', { batch_id: batchId }, delRes => {
+        if (!delRes.success) {
+            btn.innerHTML = orig; btn.disabled = false;
+            showToast('Failed to clear old batch.', 'error'); return;
+        }
+        $.post(apiUrl('link_folder.php'), { title: eventTitle, folder_path: folderPath, visibility }, res => {
+            btn.innerHTML = orig; btn.disabled = false;
+            if (res.success) { showToast('Folder synced!', 'success'); fetchMedia(); }
+            else showToast(`Sync failed: ${res.message || 'Folder missing?'}`, 'error');
+        }).fail(() => { btn.innerHTML = orig; btn.disabled = false; showToast('Sync error — connection lost.', 'error'); });
+    });
+}
+
+async function syncAllFolders(btn, eventName) {
+    if (!confirm(`Sync all folders for "${eventName}"? This re-scans every linked NAS folder in this event.`)) return;
+
+    const eventBatches = allItems.filter(i => i.title === eventName && (i.type === 'work' || i.type === 'link') && i.batch_id);
+    if (eventBatches.length === 0) return showToast('No folders found to sync.', 'warning');
+
+    const orig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...'; btn.disabled = true;
+
+    const batches = {};
+    eventBatches.forEach(i => { if (!batches[i.batch_id]) batches[i.batch_id] = i; });
+
+    let ok = 0, fail = 0;
+    const vis = eventBatches[0].visibility || 'public';
+
+    for (const [bId, item] of Object.entries(batches)) {
+        let cleanPath = (item.file_path || '').replace(/https?:\/\/supriyadigitals\.store\//i, '');
+        cleanPath = cleanPath.replace(/^(Kalyani|supriya_studio)\//i, '');
+        const parts = cleanPath.split('/'); parts.pop();
+        const folderPath = parts.join('/');
+
+        try {
+            await $.post(apiUrl('delete.php'), { batch_id: bId, admin_token: ADMIN_TOKEN });
+            const res = await $.post(apiUrl('link_folder.php'), { title: eventName, folder_path: folderPath, visibility: vis });
+            if (res.success) ok++; else fail++;
+        } catch(e) { fail++; }
+    }
+
+    btn.innerHTML = orig; btn.disabled = false;
+    if (fail > 0) showToast(`Synced ${ok} folders. ${fail} failed.`, 'warning');
+    else showToast(`All ${ok} folders synced!`, 'success');
+    fetchMedia();
+}
+
+// ════════════════════════════════════════════════
+//  DRAG TO REORDER
+// ════════════════════════════════════════════════
+function initSortable() {
+    if (!$.fn.sortable) return;
+    $('.event-sortable').sortable({
+        handle: '.drag-handle',
+        items: '.sortable-item',
+        update: function() {
+            let order = [];
+            $(this).find('.sortable-item').each(function(i) {
+                const rawId = String($(this).data('id'));
+                const isBatch = $(this).hasClass('batch-card');
+                if (isBatch) {
+                    allItems.filter(item => item.batch_id === rawId).forEach(item => {
+                        order.push({ id: item.id, order: i });
+                    });
+                } else {
+                    order.push({ id: rawId, order: i });
+                }
+            });
+            apiPost('update_order.php', { newOrder: order }, res => {
+                if (res.success) showToast('Order saved', 'success');
+                else showToast('Failed to save order', 'error');
+            });
+        }
+    });
+}
+
+// ════════════════════════════════════════════════
+//  VIEWER HISTORY
+// ════════════════════════════════════════════════
+function openHistory() { $('#historyModal').modal('show'); loadHistory(); }
+
+function loadHistory() {
+    const type   = $('#hist-filter').val();
+    const search = ($('#hist-search').val() || '').trim();
+    let path = 'fetch_history.php?limit=300';
+    if (type)   path += '&type='   + encodeURIComponent(type);
+    if (search) path += '&search=' + encodeURIComponent(search);
+
+    $('#hist-body').html('<div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div>');
+    $('#hist-count').text('');
+
+    apiGet(path, res => {
+        if (!res.success || !res.data || res.data.length === 0) {
+            $('#hist-body').html('<div class="empty-state">No history found.</div>');
+            $('#hist-count').text('0 records');
+            return;
+        }
+
+        $('#hist-count').text(res.data.length + ' record' + (res.data.length !== 1 ? 's' : ''));
+
+        const now = new Date();
+        // Group by date for section headers
+        const byDate = {};
+        res.data.forEach(log => {
+            const d    = new Date(log.last_active);
+            const key  = d.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+            if (!byDate[key]) byDate[key] = [];
+            byDate[key].push(log);
+        });
+
+        let html = '';
+        for (const [dateStr, logs] of Object.entries(byDate)) {
+            html += `<div style="padding:8px 20px 4px; font-size:0.72rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:0.08em; border-top:1px solid #e5e7eb; background:#f9fafb;">${escapeHtml(dateStr)}</div>`;
+
+            logs.forEach(log => {
+                const d     = new Date(log.last_active);
+                const diff  = (now - d) / 1000;
+                const isNow = Math.abs(diff) < 60;
+                const isSel = log.action_log.startsWith('SELECTION:');
+                const isDl  = log.action_log.startsWith('Download');
+
+                // Time spent badge
+                let timeBadge = '';
+                if (isNow) {
+                    timeBadge = `<span class="badge-live blink" style="font-size:0.7rem;"><i class="fas fa-circle" style="font-size:6px;"></i> LIVE</span>`;
+                } else if (log.time_spent_seconds > 0) {
+                    const m = Math.floor(log.time_spent_seconds / 60);
+                    const s = log.time_spent_seconds % 60;
+                    timeBadge = `<span style="font-size:0.75rem; color:#6b7280; background:#f3f4f6; padding:2px 6px; border-radius:10px;"><i class="fas fa-clock" style="margin-right:3px;"></i>${m}m ${s}s</span>`;
+                }
+
+                // Browser
+                let browser = ''; let browserIcon = 'fa-globe';
+                if (log.browser_info) {
+                    if      (log.browser_info.includes('Chrome'))  { browser = 'Chrome';  browserIcon = 'fa-chrome'; }
+                    else if (log.browser_info.includes('Firefox')) { browser = 'Firefox'; browserIcon = 'fa-firefox'; }
+                    else if (log.browser_info.includes('Safari'))  { browser = 'Safari';  browserIcon = 'fa-safari'; }
+                    else if (log.browser_info.includes('Edge'))    { browser = 'Edge';    browserIcon = 'fa-edge'; }
+                    browser += log.browser_info.includes('Mobile') ? ' 📱' : ' 🖥️';
+                }
+
+                // ── ACTION BLOCK ────────────────────────────
+                let actionBlock = '';
+                if (isSel) {
+                    // Parse SELECTION data
+                    const codeMatch  = log.action_log.match(/SELECTION:#([A-Z0-9]+)/);
+                    const totalMatch = log.action_log.match(/Total=(\d+)/);
+                    const foldMatch  = log.action_log.match(/Folders=([^|]+)\|?/);
+                    const filesMatch = log.action_log.match(/Files=(.+)$/);
+                    const code  = codeMatch  ? codeMatch[1]  : '?';
+                    const total = totalMatch ? totalMatch[1] : '?';
+
+                    // Parse per-folder breakdown from Files list
+                    let foldersHtml = '';
+                    if (filesMatch) {
+                        const fileList = filesMatch[1].split('|').filter(Boolean);
+                        const folderMap = {};
+                        fileList.forEach(url => {
+                            const parts  = url.split('/');
+                            const fname  = parts.pop() || url;
+                            const folder = parts.pop() || 'Main';
+                            if (!folderMap[folder]) folderMap[folder] = [];
+                            folderMap[folder].push(fname);
+                        });
+                        const folderCount = Object.keys(folderMap).length;
+                        const detailId = 'sel_' + (log.id || Math.random().toString(36).slice(2));
+
+                        let folderPreview = '';
+                        for (const [fld, fnames] of Object.entries(folderMap)) {
+                            folderPreview += `<div style="margin-bottom:10px;">
+                                <div style="font-weight:700; color:#b45309; font-size:0.82rem; margin-bottom:4px;">
+                                    <i class="fas fa-folder" style="margin-right:5px;"></i>${escapeHtml(fld)} <span style="color:var(--muted); font-weight:400;">(${fnames.length} photos)</span>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                    ${fnames.map((fn,i) => `<span style="background:#fff; border:1px solid #d1d5db; border-radius:4px; padding:2px 7px; font-size:0.75rem; font-family:monospace; color:#374151;">${i+1}. ${escapeHtml(fn)}</span>`).join('')}
+                                </div>
+                            </div>`;
+                        }
+
+                        foldersHtml = `
+                            <div style="margin-top:8px;">
+                                <button onclick="toggleSelDetail('${detailId}')" style="background:none; border:1px solid var(--gold); color:var(--gold); border-radius:5px; padding:3px 10px; font-size:0.77rem; cursor:pointer;">
+                                    <i class="fas fa-eye" style="margin-right:4px;"></i>View ${folderCount} folder${folderCount>1?'s':''} detail
+                                </button>
+                            </div>
+                            <div id="${detailId}" style="display:none; margin-top:10px; padding:12px; background:#f9fafb; border-radius:8px; border:1px solid #e5e7eb; max-height:300px; overflow-y:auto;">
+                                ${folderPreview}
+                            </div>`;
+                    } else if (foldMatch) {
+                        // Fallback: show folder summary from Folders= field
+                        const parts2 = foldMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+                        foldersHtml = `<div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:5px;">
+                            ${parts2.map(p => `<span style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; border-radius:5px; padding:2px 8px; font-size:0.78rem;"><i class="fas fa-folder" style="margin-right:3px;"></i>${escapeHtml(p)}</span>`).join('')}
+                        </div>`;
+                    }
+
+                    actionBlock = `<div>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span class="badge-sel" style="font-size:0.82rem; padding:3px 10px;"><i class="fas fa-folder-open"></i> Selection <span style="font-family:monospace; letter-spacing:0.05em;">#${escapeHtml(code)}</span></span>
+                            <span style="background:#1f2937; color:#93c5fd; border-radius:12px; padding:2px 10px; font-size:0.78rem; font-weight:700;">📸 ${escapeHtml(total)} photos</span>
+                        </div>
+                        ${foldersHtml}
+                    </div>`;
+                } else if (isDl) {
+                    const dlType = log.action_log.replace('Download:', '').trim() || log.action_log;
+                    actionBlock = `<span style="color:var(--green); font-weight:700; font-size:0.85rem;"><i class="fas fa-download" style="margin-right:5px;"></i>${escapeHtml(dlType)}</span>`;
+                } else {
+                    actionBlock = `<span style="color:var(--muted); font-size:0.83rem;">${escapeHtml(log.action_log)}</span>`;
+                }
+
+                html += `<div style="padding:12px 20px; border-bottom:1px solid #f0f0f0; display:flex; gap:14px; align-items:flex-start; background:#fff;">
+                    <!-- Left: time + device -->
+                    <div style="min-width:78px; flex-shrink:0; text-align:right;">
+                        <div style="font-weight:700; font-size:0.85rem; color:#111;">${d.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'})}</div>
+                        ${timeBadge}
+                        <div style="font-size:0.7rem; color:#9ca3af; margin-top:3px;" title="${escapeHtml(log.browser_info||'')}"><i class="fab ${browserIcon}" style="margin-right:2px;"></i>${escapeHtml(browser)}</div>
+                    </div>
+                    <!-- Middle: event + action -->
+                    <div style="flex:1; min-width:0;">
+                        <div style="margin-bottom:5px;">
+                            <span style="font-weight:700; font-size:0.88rem; color:#1f2937;">${escapeHtml(log.event_opened || '—')}</span>
+                            ${log.site_visited && log.site_visited !== 'Selection Save' ? `<span style="font-size:0.73rem; color:#9ca3af; margin-left:6px;">${escapeHtml(log.site_visited)}</span>` : ''}
+                        </div>
+                        ${actionBlock}
+                    </div>
+                    <!-- Right: delete -->
+                    <div style="flex-shrink:0;">
+                        <button onclick="deleteHistoryRecord(${log.id||0})" title="Delete this record"
+                            style="background:none; border:1px solid #fca5a5; color:#ef4444; border-radius:5px; padding:4px 8px; font-size:0.72rem; cursor:pointer;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        $('#hist-body').html(html);
+    }, () => {
+        $('#hist-body').html('<div class="empty-state" style="color:#ef4444;">Failed to load history.</div>');
+    });
+}
+
+function toggleSelDetail(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function deleteHistoryRecord(id) {
+    if (!id || !confirm('Delete this single history record?')) return;
+    apiPost('delete_history_record.php', { id }, res => {
+        if (res.success) { showToast('Record deleted.', 'success'); loadHistory(); }
+        else showToast(res.message || 'Failed to delete.', 'error');
+    });
+}
+
+function clearHistory(keepSelections) {
+    const msg = keepSelections
+        ? 'Clear all activity logs but keep photo selection codes?'
+        : 'Clear ALL viewer history permanently? This cannot be undone.';
+    if (!confirm(msg)) return;
+
+    apiPost('clear_history.php', { keep_selections: keepSelections }, res => {
+        if (res.success) { showToast(res.message, 'success'); loadHistory(); }
+        else showToast('Failed to clear history', 'error');
+    });
+}
+
+// ════════════════════════════════════════════════
+//  UTILITIES
+// ════════════════════════════════════════════════
+function escapeHtml(s) {
+    return (s || '').toString()
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+</script>
+</body>
+</html>
